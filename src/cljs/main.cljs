@@ -71,6 +71,7 @@
 (defn open-conenction []
   (set! conn (js/WebSocket. "ws://localhost:3000/ws"))
   (set! (.-onmessage conn) (fn [event] 
+;                             (js/alert event)
                              (let [data (.-data event)
                                    data-json (.parse js/JSON data)]
                                (.setX circle (.-x data-json))

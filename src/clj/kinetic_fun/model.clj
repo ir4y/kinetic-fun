@@ -1,5 +1,6 @@
 (ns kinetic-fun.model
-    (:require [taoensso.carmine :as car]))
+    (:require [taoensso.carmine :as car]
+              [org.httpkit.server :as kit]))
 
 
 (def pool         (car/make-conn-pool))
@@ -7,11 +8,15 @@
 
 (defmacro wcar [& body] `(car/with-conn pool spec-server1 ~@body))
 
-(def listener
-    (car/with-new-pubsub-listener
-         spec-server1 {"foobar" (fn f1 [msg] (println "Channel match: " msg))
-                                        "foo*"   (fn f2 [msg] (println "Pattern match: " msg))}
-         (car/subscribe  "foobar" "foobaz")
-         (car/psubscribe "foo*")))
+(defn publish-circle [message]
+  (wcar (car/publish "circle" message)))
 
-(wcar (car/publish "foobar" "Hello to foobar!"))
+(defn setup-listener [channel]
+  (car/with-new-pubsub-listener 
+    spec-server1 {"circle" (fn f1 [msg] 
+                             (do
+                               (println msg)
+                               (let [json (get msg 2)]
+                                 (when (not (= json 1))
+                                   (kit/send! channel json)))))}
+    (car/subscribe "circle")))
