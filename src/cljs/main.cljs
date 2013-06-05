@@ -50,11 +50,12 @@
                          (let [mouse_pos (.getMousePosition stage)
                                x (.-x mouse_pos)
                                y (.-y mouse_pos)
-                               pos (str "(x=" x ";y=" y ")")]
+                               coords (js-obj "x" x "y" y)
+                               json-coords (.stringify js/JSON coords)]
                                (when (and (not (= x last-x)) (not (= y last-y)))
                                      (set! last-x x)
                                      (set! last-y y)
-                                     (.send conn pos)
+                                     (.send conn json-coords)
                                      (.draw layer)))))
 
 
@@ -70,6 +71,10 @@
 (defn open-conenction []
   (set! conn (js/WebSocket. "ws://localhost:3000/ws"))
   (set! (.-onmessage conn) (fn [event] 
-                             (.setText log (.-data event))
-                             (.draw layer))))
+                             (let [data (.-data event)
+                                   data-json (.parse js/JSON data)]
+                               (.setX circle (.-x data-json))
+                               (.setY circle (.-y data-json))
+                               (.setText log (str "x=" (.-x data-json) ",y=" (.-y data-json)))
+                               (.draw layer)))))
 (open-conenction)

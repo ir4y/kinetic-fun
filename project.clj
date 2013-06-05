@@ -4,6 +4,9 @@
   :dependencies [[org.clojure/clojure "1.5.1"]
                  [jayq "2.3.0"]
                  [compojure "1.1.5"]
+                 [com.taoensso/carmine "1.6.0"]
+                 [lib-noir "0.6.0"]
+                 [cheshire "5.0.2"]
                  [http-kit "2.1.2"]]
   :plugins [[lein-cljsbuild "0.3.0"]]
   :cljsbuild {
