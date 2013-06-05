@@ -14,9 +14,7 @@
 (defn setup-listener [channel]
   (car/with-new-pubsub-listener 
     spec-server1 {"circle" (fn f1 [msg] 
-                             (do
-                               (println msg)
-                               (let [json (get msg 2)]
-                                 (when (not (= json 1))
-                                   (kit/send! channel json)))))}
+                             (let [json (get msg 2)]
+                               (when (not (= json 1))
+                                 (kit/send! channel json))))}
     (car/subscribe "circle")))

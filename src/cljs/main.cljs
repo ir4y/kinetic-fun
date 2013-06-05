@@ -69,7 +69,7 @@
 
 
 (defn open-conenction []
-  (set! conn (js/WebSocket. "ws://localhost:3000/ws"))
+  (set! conn (js/WebSocket. "ws://192.168.0.102:3000/ws"))
   (set! (.-onmessage conn) (fn [event] 
 ;                             (js/alert event)
                              (let [data (.-data event)
