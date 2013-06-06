@@ -1,6 +1,7 @@
 (ns kinetic-fun.model
     (:require [taoensso.carmine :as car]
-              [org.httpkit.server :as kit]))
+              [org.httpkit.server :as kit]
+              [clj-redis-session.core :as redis-session-core]))
 
 
 (def pool         (car/make-conn-pool))
@@ -18,3 +19,5 @@
                                (when (not (= json 1))
                                  (kit/send! channel json))))}
     (car/subscribe "circle")))
+
+(def redis-session-store (redis-session-core/redis-store pool spec-server1))

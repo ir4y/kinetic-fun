@@ -7,6 +7,8 @@
                  [com.taoensso/carmine "1.6.0"]
                  [lib-noir "0.6.0"]
                  [cheshire "5.0.2"]
+                 [lib-noir "0.6.0"]
+                 [clj-redis-session "1.0.0"]
                  [http-kit "2.1.2"]]
   :plugins [[lein-cljsbuild "0.3.0"]]
   :cljsbuild {
