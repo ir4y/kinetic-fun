@@ -81,3 +81,8 @@
                                (.setText log (str "x=" (.-x data-json) ",y=" (.-y data-json)))
                                (.draw layer)))))
 (open-conenction)
+
+(jm/let-ajax [initial {:url "/init-data" :dataType :json}]
+             (.setX circle (.-x initial))
+             (.setY circle (.-y initial))
+             (.draw layer))
