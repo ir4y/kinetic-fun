@@ -5,21 +5,23 @@
             [noir.util.middleware :as noir]
             [noir.session :as session]
             [noir.cookies :as cookies]
-            [ring.util.response :as resp]
+            [ring.util.response :as resp]            
+            [ring.middleware.session.store :as store]
+            [ring.util.codec :as codec]
             [org.httpkit.server :as kit]
             [cheshire.core :as json]
             [kinetic-fun.model :as model]))
 
 (defn setup-new-coords [coords]
-  (let [data (json/parse-string coords)]
+  (let [data (json/parse-string coords)
+        session_id (codec/url-decode (data "session"))
+        session (store/read-session model/redis-session-store session_id)
+        noir-session (merge (session :noir {}) data)]    
     (model/publish-circle coords)
-    (session/put! :circle-x (data "x"))
-    (session/put! :circle-y (data "y"))))
-
+    (store/write-session model/redis-session-store session_id (merge session {:noir noir-session}))))
 
 (defn ws_handler [request]
   (session/put! :value "ws")
-  (println (session/get! :value))
   (kit/with-channel request channel
     (kit/on-close channel (fn [status]                            
                             (println "channel closed: " status)))
@@ -31,6 +33,9 @@
   (GET "/push" [value] (println (cookies/get :ring-session)) (session/put! :value value) "pushed")
   (GET "/pop" [] (str "pop:" (session/get :value)))
   (GET "/ws" [] ws_handler)
+  (GET "/init-data" [] (let [x (session/get "x" 100)
+                             y (session/get "y" 100)] 
+                         (json/generate-string {:x x :y y})))
   (route/resources "/")
   (route/not-found "Not Found"))
 

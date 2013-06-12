@@ -1,6 +1,8 @@
 (ns kinetic.main
     (:use [cljs.core :only [js-obj]]
           [jayq.core :only [$ css]])
+    (:require
+          [goog.net.cookies :as cookies])
     (:require-macros [jayq.macros :as jm]))
 
 
@@ -30,6 +32,7 @@
                            "strikeWidth" 4
                            "draggable" true)))
 
+(def session (cookies/get "ring-session"))
 
 (.on circle "mouseover" (fn [] (this-as this
                                         (.setStroke this "blue")
@@ -50,7 +53,7 @@
                          (let [mouse_pos (.getMousePosition stage)
                                x (.-x mouse_pos)
                                y (.-y mouse_pos)
-                               coords (js-obj "x" x "y" y)
+                               coords (js-obj "x" x "y" y "session" session)
                                json-coords (.stringify js/JSON coords)]
                                (when (and (not (= x last-x)) (not (= y last-y)))
                                      (set! last-x x)
@@ -66,7 +69,6 @@
 
 (when (.-MozWebSocket js/window)
   (set! (.-WebSocket js/window) (.-MozWebSocket js/window)))
-
 
 (defn open-conenction []
   (set! conn (js/WebSocket. "ws://192.168.0.102:3000/ws"))
