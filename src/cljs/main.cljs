@@ -49,7 +49,7 @@
 (def last-y 0)
 
 
-(.on circle "dragmove" (fn []
+(.on circle "dragmove" (fn [] false
                          (let [mouse_pos (.getMousePosition stage)
                                x (.-x mouse_pos)
                                y (.-y mouse_pos)

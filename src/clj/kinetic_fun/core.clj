@@ -21,7 +21,6 @@
     (store/write-session model/redis-session-store session_id (merge session {:noir noir-session}))))
 
 (defn ws_handler [request]
-  (session/put! :value "ws")
   (kit/with-channel request channel
     (kit/on-close channel (fn [status]                            
                             (println "channel closed: " status)))
@@ -30,12 +29,13 @@
 
 (defroutes app-routes
   (GET "/" [] "Hello World")
-  (GET "/push" [value] (println (cookies/get :ring-session)) (session/put! :value value) "pushed")
+  (GET "/push" [value] (session/put! :value value) "pushed")
   (GET "/pop" [] (str "pop:" (session/get :value)))
   (GET "/ws" [] ws_handler)
   (GET "/init-data" [] (let [x (session/get "x" 100)
                              y (session/get "y" 100)] 
                          (json/generate-string {:x x :y y})))
+  (GET "/all-balls" [] (json/generate-string (model/get-all-balls)))
   (route/resources "/")
   (route/not-found "Not Found"))
 

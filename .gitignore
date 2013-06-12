@@ -9,4 +9,5 @@ pom.xml
 .lein-failures
 .lein-plugins
 .lein-env
+*.swp
 resources/public/js/main.js
