@@ -32,6 +32,8 @@
                            "strikeWidth" 4
                            "draggable" true)))
 
+(def circles {})
+
 (def session (cookies/get "ring-session"))
 
 (.on circle "mouseover" (fn [] (this-as this
@@ -73,16 +75,35 @@
 (defn open-conenction []
   (set! conn (js/WebSocket. "ws://192.168.0.102:3000/ws"))
   (set! (.-onmessage conn) (fn [event] 
-;                             (js/alert event)
                              (let [data (.-data event)
-                                   data-json (.parse js/JSON data)]
-                               (.setX circle (.-x data-json))
-                               (.setY circle (.-y data-json))
-                               (.setText log (str "x=" (.-x data-json) ",y=" (.-y data-json)))
-                               (.draw layer)))))
+                                   data-json (.parse js/JSON data)
+                                   session_id (js/decodeURIComponent (.-session data-json))
+                                   used-circle (circles session_id)]
+                               (when (not (= session_id (js/decodeURIComponent session)))
+                                 (.setX used-circle (.-x data-json))
+                                 (.setY used-circle (.-y data-json))
+                                 (.draw layer))))))
 (open-conenction)
 
-(jm/let-ajax [initial {:url "/init-data" :dataType :json}]
+(jm/let-ajax [initial {:url "/init-data" :dataType :json}
+              all-balls {:url "/all-balls" :dataType :json}]
              (.setX circle (.-x initial))
              (.setY circle (.-y initial))
+             (doall
+               (for [ball all-balls]
+                 (let [x (.-x ball)
+                       y (.-y ball)
+                       session_id (.-session_id ball)
+                       new-circle  (Kinetic/Circle. (js-obj "x" x 
+                                                            "y" y
+                                                            "radius" 70
+                                                            "fill" "blue"
+                                                            "stroke" "black"
+                                                            "strikeWidth" 4
+                                                            "draggable" false))]
+                   (when (not (= session_id (js/decodeURIComponent session)))
+                     (set! circles (merge circles {session_id new-circle}))
+                     (.add layer new-circle))))) 
              (.draw layer))
+
+
