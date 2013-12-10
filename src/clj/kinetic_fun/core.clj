@@ -28,9 +28,10 @@
     (def listener (model/setup-listener channel))))
 
 (defroutes app-routes
-  (GET "/" [] "Hello World")
-  (GET "/push" [value] (session/put! :value value) "pushed")
-  (GET "/pop" [] (str "pop:" (session/get :value)))
+  (GET "/" [] 
+       (session/put! :x 100) 
+       (session/put! :y 100) 
+       (resp/resource-response "index.html" {:root "public"}))
   (GET "/ws" [] ws_handler)
   (GET "/init-data" [] (let [x (session/get "x" 100)
                              y (session/get "y" 100)] 
