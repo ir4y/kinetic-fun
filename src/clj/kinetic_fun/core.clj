@@ -12,20 +12,25 @@
             [cheshire.core :as json]
             [kinetic-fun.model :as model]))
 
+(def my-channel (atom nil))
+
 (defn setup-new-coords [coords]
   (let [data (json/parse-string coords)
         session_id (codec/url-decode (data "session"))
         session (store/read-session model/redis-session-store session_id)
         noir-session (merge (session :noir {}) data)]    
-    (model/publish-circle coords)
-    (store/write-session model/redis-session-store session_id (merge session {:noir noir-session}))))
+    (reset! my-channel coords)
+    (store/write-session model/redis-session-store session_id 
+      (merge session {:noir noir-session}))))
 
 (defn ws_handler [request]
   (kit/with-channel request channel
     (kit/on-close channel (fn [status]                            
                             (println "channel closed: " status)))
     (kit/on-receive channel setup-new-coords)
-    (def listener (model/setup-listener channel))))
+    (add-watch my-channel channel
+      (fn [_ _ _ json]
+        (kit/send! channel json)))))
 
 (defroutes app-routes
   (GET "/" [] 
