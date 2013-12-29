@@ -14,28 +14,29 @@
 
 (def my-channel (atom nil))
 
-(defn setup-new-coords [coords]
-  (let [data (json/parse-string coords)
-        session_id (codec/url-decode (data "session"))
-        session (store/read-session model/redis-session-store session_id)
-        noir-session (merge (session :noir {}) data)]    
-    (reset! my-channel coords)
-    (store/write-session model/redis-session-store session_id 
-      (merge session {:noir noir-session}))))
+(defn setup-new-coords [session_id]
+  (fn [coords]
+    (let [data (json/parse-string coords)
+          session (store/read-session model/redis-session-store session_id)
+          noir-session (merge (session :noir {}) data)]    
+      (reset! my-channel coords)
+      (store/write-session model/redis-session-store session_id 
+        (merge session {:noir noir-session})))))
 
 (defn ws_handler [request]
-  (kit/with-channel request channel
-    (kit/on-close channel (fn [status]                            
-                            (println "channel closed: " status)))
-    (kit/on-receive channel setup-new-coords)
-    (add-watch my-channel channel
-      (fn [_ _ _ json]
-        (kit/send! channel json)))))
+  (let [session_id (cookies/get "ring-session")]
+    (kit/with-channel request channel
+      (kit/on-close channel (fn [status]                            
+                              (remove-watch my-channel channel)))
+      (kit/on-receive channel (setup-new-coords session_id))
+      (add-watch my-channel channel
+        (fn [_ _ _ json]
+          (kit/send! channel json))))))
 
 (defroutes app-routes
   (GET "/" [] 
-       (session/put! :x 100) 
-       (session/put! :y 100) 
+       (session/put! "x" 100) 
+       (session/put! "y" 100) 
        (resp/resource-response "index.html" {:root "public"}))
   (GET "/ws" [] ws_handler)
   (GET "/init-data" [] (let [x (session/get "x" 100)
